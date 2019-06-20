@@ -53,8 +53,8 @@ func findMedianSortedArrays(nums1 []int, nums2 []int) float64 {
 	} else {
 		// Otherwise, divide the midPoint entry with the following
 		// entry (indexes start at 0)
-        returnValue = (float64(combinedNums[midPoint-1]) +
-                       float64(combinedNums[midPoint])) / 2.0
+		returnValue = (float64(combinedNums[midPoint-1]) +
+			float64(combinedNums[midPoint])) / 2.0
                      
 	}
 	return returnValue
