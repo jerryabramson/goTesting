@@ -1,5 +1,5 @@
 // leetcode problem to find median of two integer arrays
-package main
+package main;
 
 import (
     "fmt"
