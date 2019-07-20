@@ -15,11 +15,13 @@ import (
 	"errors"
 )
 
+// constants - MINE is a mine
 const (
 	MINE    = -1
 	UNKNOWN = -1000
 )
 
+// encapsulate the board
 type board struct {
 	discoveredBoard     [][]int64
 	actualBoard         [][]int64
@@ -32,6 +34,8 @@ type board struct {
 	spotsTraversedSoFar int
 }
 
+// Create a new board. Note, Go has no real two-dimensional
+// arrays. Instead, you have an array of arrays.
 func New(m int, w int, h int) board {
 	b := board{
 		discoveredBoard: make([][]int64, w, h),
@@ -55,6 +59,7 @@ func New(m int, w int, h int) board {
 	return b
 }
 
+// place specified number of mines throughout the board
 func PopulateBoard(b *board) {
 	minesSoFar := b.mineCount
 	for {
@@ -73,12 +78,13 @@ func PopulateBoard(b *board) {
 
 }
 
+// determine if a space is a mine
 func IsMined(b *board, x int, y int) bool {
 	return b.actualBoard[x][y] == MINE
 }
 
-func countsAroundPoint(b *board, x int, y int) int64 {
-	cnt := int64(0)
+// Count the number of mines surrounding a given point
+// on the board
 	/*
 	 * For a given piece, 'p', we count the number
 	 * of mines, as show below.
@@ -98,6 +104,8 @@ func countsAroundPoint(b *board, x int, y int) int64 {
 	 *    |             |
 	 *    +-------------+
 	 */
+func CountsAroundPoint(b *board, x int, y int) int64 {
+	cnt := int64(0)
 	checkXoffset := int(-1)
 	checkYoffset := int(-1)
 	for true {
@@ -128,6 +136,8 @@ func countsAroundPoint(b *board, x int, y int) int64 {
 	return cnt
 }
 
+// Reveal either the board discovered so far,
+// or the underlying board itself (after win/lose)
 func revealBoard(b *board, h bool) {
 	fmt.Println()
 	for x := 0; x < b.width; x++ {
@@ -140,26 +150,29 @@ func revealBoard(b *board, h bool) {
 	fmt.Println()
 }
 
+// Go through each point, and set the count of
+// mines around it. We skipp points that are mines
+// themselves.
 func setBoardCounts(b *board) {
 	for x := 0; x < b.width; x++ {
 		for y := 0; y < b.height; y++ {
 			if b.actualBoard[x][y] != MINE {
-				c := countsAroundPoint(b, x, y)
+				c := CountsAroundPoint(b, x, y)
 				b.actualBoard[x][y] = c
 			}
 		}
 	}
 }
 
+// fancy display of a point on the board.
 func showPiece(b *board, x int, y int, h bool) string {
-
 	myPieces := b.discoveredBoard
 	if !h {
 		myPieces = b.actualBoard
 	}
 	p := myPieces[x][y]
 	if p == MINE {
-		return "\033[41;1m \033[0m\033[31;1m*\033[0m\033[41;1m \033[0m"
+		return "\033[41;1m \033[0m\033[31;1mX\033[0m\033[41;1m \033[0m"
 	} else if p == UNKNOWN {
 		return "\033[47m ? \033[0m"
 	} else {
@@ -174,11 +187,13 @@ func showPiece(b *board, x int, y int, h bool) string {
 	}
 }
 
+// determine if a provided dimension is valid
 func validDimension(b *board, x int, y int) bool {
 	return ((x >= 0 && x < b.width) && (y >= 0 && y < b.height))
 }
 
-func Play(b *board) {
+// main game loop
+func Play(b *board) string {
 	sc := bufio.NewScanner(os.Stdin)
 	fmt.Printf("\033[2J\033[0H\033[1mCurrent Board\n")
 	revealBoard(b, true)
@@ -190,8 +205,9 @@ func Play(b *board) {
 			if msg == nil {
 				msg = io.EOF
 			}
-			fmt.Printf("\nI/O Error: %v\n", msg)
-			os.Exit(0)
+			var errMsg strings.Builder
+			fmt.Fprintf(&errMsg, "\nI/O Error: %v\n", msg)
+			return errMsg.String()
 		}
 
 		input := sc.Text()
@@ -225,19 +241,19 @@ func Play(b *board) {
 			fmt.Printf("\033[2J\033[0H")
 			fmt.Printf("\033[31mBOOM!!!\033[0m\n")
 			revealBoard(b, false)
-			return
+			return "BOOM"
 		}
 		b.discoveredBoard[x][y] = b.actualBoard[x][y]
 		b.spotsTraversedSoFar++
 		if b.spotsTraversedSoFar+b.mineCount == b.boardSize {
 			fmt.Printf("\033[2J\033[0H")
 			fmt.Printf("\033[32mYOU WIN !!!\033[0m\n")
-			revealBoard(b, false)
-			os.Exit(0)
+			return "YOU WIN"
 		}
 		fmt.Printf("\033[2J\033[0H\033[1mCurrent Board\n")
 		revealBoard(b, true)
 	}
+	return "DONE"
 }
 
 
