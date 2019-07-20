@@ -1,0 +1,2 @@
+#!/bin/sh
+go build minesweeper.go boardFunctions.go utils.go
