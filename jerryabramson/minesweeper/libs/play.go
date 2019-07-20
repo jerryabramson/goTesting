@@ -1,4 +1,7 @@
-package main
+// Simple implementation of MineSwepper:
+//     https://en.wikipedia.org/wiki/Minesweeper_(video_game)
+package minesweeper
+
 
 import (
 	"bufio"
@@ -9,6 +12,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"errors"
 )
 
 const (
@@ -125,7 +129,9 @@ func countsAroundPoint(b *board, x int, y int) int64 {
 }
 
 func revealBoard(b *board, h bool) {
+	fmt.Println()
 	for x := 0; x < b.width; x++ {
+		fmt.Printf("\t")
 		for y := 0; y < b.height; y++ {
 			fmt.Printf("%s", showPiece(b, x, y, h))
 		}
@@ -232,4 +238,33 @@ func Play(b *board) {
 		fmt.Printf("\033[2J\033[0H\033[1mCurrent Board\n")
 		revealBoard(b, true)
 	}
+}
+
+
+
+
+// utility to safely convert a string to an int, with proper
+// error reporting.
+
+
+// global err
+var (
+	err error
+)
+
+// Input is a string, returns a value, and an error code
+func SafeAtoI(val string) (int, error) {
+	ret, e := strconv.Atoi(val)
+	if e == nil {
+       // no errors 
+		return ret, e
+	}
+	var errMsg strings.Builder
+	fmt.Fprintf(&errMsg, "utils: Invalid Number '%s'", val)
+	e = errors.New(errMsg.String())
+	return ret, e
+}
+
+func Err() error {
+	return err
 }

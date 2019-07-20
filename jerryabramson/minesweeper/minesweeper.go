@@ -1,8 +1,3 @@
-/*
- * Simple implementation of MineSwepper:
- *     https://en.wikipedia.org/wiki/Minesweeper_(video_game)
- */
-
 package main
 
 import (
@@ -10,12 +5,15 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"github.com/jerryabramson/minesweeper/libs"
 )
 
+// Main entry point
 func main() {
 	minesArg := int(9)
 	widthArg := int(9)
 	heightArg := int(9)
+	var err error
 	for argc := 1; argc < len(os.Args); {
 		arg := os.Args[argc]
 		argVal := "NONE"
@@ -31,22 +29,31 @@ func main() {
 				Usage(nil)
 			}
 			argc++
-			widthArg, err = SafeAtoI(dim[0])
-			heightArg, err = SafeAtoI(dim[1])
+			widthArg, err = minesweeper.SafeAtoI(dim[0])
+			if (err != nil) {
+				Usage(err)
+			}
+			heightArg, err = minesweeper.SafeAtoI(dim[1])
+			if (err != nil) {
+				Usage(err)
+			}
 		} else if strings.Compare(arg, "--mines") == 0 {
 			if strings.Compare(argVal, "NONE") == 0 {
 				Usage(nil)
 			}
-			minesArg, err = SafeAtoI(argVal)
+			minesArg, err = minesweeper.SafeAtoI(argVal)
+			if (err != nil) {
+				Usage(err)
+			}
 			argc++
 		} else {
 			Usage(nil)
 		}
 		argc++
 	}
-	b := New(minesArg, widthArg, heightArg)
-	PopulateBoard(&b)
-	Play(&b)
+	b := minesweeper.New(minesArg, widthArg, heightArg)
+	minesweeper.PopulateBoard(&b)
+	minesweeper.Play(&b)
 }
 
 func Usage(err error) {
