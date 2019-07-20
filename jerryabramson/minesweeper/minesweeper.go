@@ -3,13 +3,13 @@
  *     https://en.wikipedia.org/wiki/Minesweeper_(video_game)
  */
 
-// leetcode problem to find median of two integer arrays
 package main
 
 import (
 	"fmt"
 	"os"
 	"strings"
+	"errors"
 )
 
 func main() {
@@ -19,30 +19,28 @@ func main() {
 	for argc := 1; argc < len(os.Args); {
 		arg := os.Args[argc]
 		argVal := "NONE"
-		if (argc < len(os.Args) - 1) {
-			argVal = os.Args[argc+1];
+		if argc < len(os.Args)-1 {
+			argVal = os.Args[argc+1]
 		}
-//		fmt.Printf("argc = %d, arg = %s, argVal = %s\n",
-//			argc, arg, argVal);
-		if (strings.Compare(arg, "--size") == 0) {
-			if (strings.Compare(argVal, "NONE") == 0) {
-				Usage()
+		if strings.Compare(arg, "--size") == 0 {
+			if strings.Compare(argVal, "NONE") == 0 {
+				Usage(nil)
 			}
 			dim := strings.Split(argVal, ",")
-			if (len(dim) != 2) {
-				Usage();
+			if len(dim) != 2 {
+				Usage(nil)
 			}
 			argc++
-			widthArg = SafeAtoI(dim[0]);
-			heightArg = SafeAtoI(dim[1]);
-		} else if (strings.Compare(arg, "--mines") == 0) {
-			if (strings.Compare(argVal, "NONE") == 0) {
-				Usage();
+			widthArg, err = SafeAtoI(dim[0])
+			heightArg, err = SafeAtoI(dim[1])
+		} else if strings.Compare(arg, "--mines") == 0 {
+			if strings.Compare(argVal, "NONE") == 0 {
+				Usage(nil)
 			}
-			minesArg = SafeAtoI(argVal);
+			minesArg, err = SafeAtoI(argVal)
 			argc++
 		} else {
-			Usage();
+			Usage(nil)
 		}
 		argc++
 	}
@@ -51,8 +49,10 @@ func main() {
 	Play(&b)
 }
 
-func Usage() {
-	fmt.Println("Usage: MineSweeper [--size <x,y>] --mines <numberOfMines>");
-	os.Exit(1);
+func Usage(err error) {
+	if (err == nil) {
+		err = errors.New("")
+	}
+	fmt.Printf("\nUsage: MineSweeper [--size <x,y>] --mines <numberOfMines>: %v\n", err)
+	os.Exit(1)
 }
-    

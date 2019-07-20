@@ -1,16 +1,27 @@
 package main
 
 import (
-	"errors"
 	"strconv"
+	"errors"
+	"strings"
+	"fmt"
 )
 
-func SafeAtoI(val string) int {
-	ret := int(-1)
-	err := errors.New("none")
-	ret, err = strconv.Atoi(val)
-	if (err != nil) {
-		ret = -1
+var (
+	    err error   
+)
+
+func SafeAtoI(val string) (int, error) {
+	ret, e := strconv.Atoi(val)
+	if e == nil {
+		return ret, e
 	}
-	return ret
+	var errMsg strings.Builder
+	fmt.Fprintf(&errMsg, "utils: Invalid Number '%s'", val)
+	e = errors.New(errMsg.String())
+	return ret, e
+}
+
+func Err() error {
+	return err
 }
