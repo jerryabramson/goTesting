@@ -11,40 +11,44 @@ import (
 	"time"
 )
 
-func Log(d bool, f string, msg ...interface{}) {
-	if d {
-		fmt.Printf(f, msg...)
-	}
-}
-
 func main() {
-	testCases := int(10)
-	err := errors.New("none")
-	dbg := bool(false)
+	testCases := int(10)      // default of 10 test cases
+	err := errors.New("none") //  no errors
+	dbg := bool(false)        // debug off by default
+	// parse command-line args using simple syntax checker
 	for argc := 1; argc < len(os.Args); argc++ {
 		a := os.Args[argc]
 		if strings.Compare(a, "-d") == 0 {
-			dbg = true
+			dbg = true // turn on debug
 		} else {
 			testCases, err = strconv.Atoi(os.Args[argc])
 			if err != nil {
-				fmt.Printf("Error %v\n", err)
+				fmt.Printf("Error %v\n", err) // handle bad arg
 				os.Exit(1)
 			}
 		}
 	}
 
+	//main loop
 	fmt.Printf("Running %d tests\n", testCases)
 	t := make([]time.Duration, testCases)
 	for caseNumber := 0; caseNumber < testCases; caseNumber++ {
-		sz := rand.Intn(1000) + 1 // size of each array to sort
-		n1 := make([]int, sz)
-		n2 := make([]int, sz)
+		myS := rand.NewSource(time.Now().UnixNano()) // more random
+		myr := rand.New(myS)
+		sz := myr.Intn(1000) + 1 // size of each array to sort
+		n1 := make([]int, sz)    // make array 1
+		n2 := make([]int, sz)    // make array 2
 		for ind := int(0); ind < sz; ind++ {
-			n1[ind] = rand.Intn(999) // random number between 1 and 999
-			n2[ind] = rand.Intn(999) // random number between 1 and 999
+			// Fill each array with numbers between 0 and 999
+			n1[ind] = myr.Intn(999)
+			n2[ind] = myr.Intn(999)
 		}
-		Log(dbg, "\nTest Case %2d: Arrays of size %3d\n", caseNumber+1, sz)
+		o := "ODD"
+		if sz%2 == 0 {
+			o = "EVEN"
+		}
+		Log(dbg, "\nTest Case %2d: Arrays of size %3d: %s\n",
+			caseNumber+1, sz, o)
 		if dbg {
 			PrintArray(n1)
 			PrintArray(n2)
@@ -67,6 +71,14 @@ func main() {
 
 }
 
+// Log messages conditionally
+func Log(d bool, f string, msg ...interface{}) {
+	if d {
+		fmt.Printf(f, msg...)
+	}
+}
+
+// simple math function : average and maximum - returns two values!
 func FindAverage(d []time.Duration) (time.Duration, time.Duration) {
 	sum := time.Duration(0)
 	max := time.Duration(0)
@@ -80,6 +92,7 @@ func FindAverage(d []time.Duration) (time.Duration, time.Duration) {
 	return avg, max
 }
 
+// print out array nicely, limit to 10 with elipses
 func PrintArray(a []int) {
 	fmt.Printf("\tArray: [")
 	i := int(0)
