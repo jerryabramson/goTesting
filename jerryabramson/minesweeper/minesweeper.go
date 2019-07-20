@@ -6,10 +6,10 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"strings"
-	"errors"
 )
 
 func main() {
@@ -50,7 +50,7 @@ func main() {
 }
 
 func Usage(err error) {
-	if (err == nil) {
+	if err == nil {
 		err = errors.New("")
 	}
 	fmt.Printf("\nUsage: MineSweeper [--size <x,y>] --mines <numberOfMines>: %v\n", err)

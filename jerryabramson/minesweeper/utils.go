@@ -1,14 +1,14 @@
 package main
 
 import (
-	"strconv"
 	"errors"
-	"strings"
 	"fmt"
+	"strconv"
+	"strings"
 )
 
 var (
-	    err error   
+	err error
 )
 
 func SafeAtoI(val string) (int, error) {

@@ -196,10 +196,16 @@ func Play(b *board) {
 			continue
 		}
 		var ierr error
-		x, ierr := SafeAtoI(dim[0]);		x--
-		if (ierr != nil) { fmt.Println(ierr) }
-		y, ierr := SafeAtoI(dim[1]);		y--
-		if (ierr != nil) { fmt.Println(ierr) }
+		x, ierr := SafeAtoI(dim[0])
+		x--
+		if ierr != nil {
+			fmt.Println(ierr)
+		}
+		y, ierr := SafeAtoI(dim[1])
+		y--
+		if ierr != nil {
+			fmt.Println(ierr)
+		}
 		if !validDimension(b, x, y) {
 			fmt.Println("** Out of Range")
 			continue
