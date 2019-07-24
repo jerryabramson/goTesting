@@ -19,6 +19,19 @@ import (
 const (
 	MINE    = -1
 	UNKNOWN = -1000
+	POSSIBLE = 100
+    ANSI_LINE                   = "\u2500"
+    BOTTOM_LEFT_CORNER          = "\u2514"
+    BOTTOM_RIGHT_CORNER         = "\u2518"
+    LEFT_COLUMN_LINE            = "\u251c"
+    BOTTOM_VERTICAL_BAR         = "\u253C"
+    TOP_VERTICAL_BAR            = "\u252C"
+    BOTTOM_BAR                  = "\u2534"
+    RIGHT_COLUMN_LINE           = "\u2524"
+    TOP_LEFT_CORNER             = "\u250c"
+    TOP_RIGHT_CORNER            = "\u2510"
+    VERTICAL_BAR                = "\u2502"
+
 )
 
 // encapsulate the board
@@ -139,13 +152,60 @@ func CountsAroundPoint(b *board, x int, y int) int64 {
 // Reveal either the board discovered so far,
 // or the underlying board itself (after win/lose)
 func revealBoard(b *board, h bool) {
-	fmt.Println()
+	fmt.Printf("\033[0m      ")
 	for x := 0; x < b.width; x++ {
-		fmt.Printf("\t")
+		fmt.Printf("%-2d  ", x+1)
+	}
+	fmt.Printf("\n")
+	fmt.Printf("    %s", TOP_LEFT_CORNER) 
+	for x := 0; x < b.width - 1; x++ {
+		fmt.Printf(ANSI_LINE)
+		fmt.Printf(ANSI_LINE)
+		fmt.Printf(ANSI_LINE)
+		fmt.Printf(TOP_VERTICAL_BAR)
+	}
+	fmt.Printf(ANSI_LINE)
+	fmt.Printf(ANSI_LINE)
+	fmt.Printf(ANSI_LINE)
+	fmt.Printf(TOP_RIGHT_CORNER)
+	fmt.Printf("\n")
+	for x := 0; x < b.width; x++ {
+		fmt.Printf("%4d%s", x+1, VERTICAL_BAR)
 		for y := 0; y < b.height; y++ {
-			fmt.Printf("%s", showPiece(b, x, y, h))
+			fmt.Printf("%s%s", showPiece(b, x, y, h), VERTICAL_BAR)
 		}
 		fmt.Println()
+		if (x < b.width - 1) {
+			fmt.Printf("    %s", LEFT_COLUMN_LINE) 
+			for x := 0; x < b.width - 1; x++ {
+				fmt.Printf(ANSI_LINE)
+				fmt.Printf(ANSI_LINE)
+				fmt.Printf(ANSI_LINE)
+				fmt.Printf(BOTTOM_VERTICAL_BAR)
+			}
+			fmt.Printf(ANSI_LINE)
+			fmt.Printf(ANSI_LINE)
+			fmt.Printf(ANSI_LINE)
+			fmt.Printf(RIGHT_COLUMN_LINE)
+			fmt.Printf("\n")
+		}
+		
+	}
+	fmt.Printf("    %s", BOTTOM_LEFT_CORNER) 
+	for x := 0; x < b.width - 1; x++ {
+		fmt.Printf(ANSI_LINE)
+		fmt.Printf(ANSI_LINE)
+		fmt.Printf(ANSI_LINE)
+		fmt.Printf(BOTTOM_BAR)
+	}
+	fmt.Printf(ANSI_LINE)
+	fmt.Printf(ANSI_LINE)
+	fmt.Printf(ANSI_LINE)
+	fmt.Printf(BOTTOM_RIGHT_CORNER)
+	fmt.Println()
+	fmt.Printf("\033[0m     ")
+	for x := 0; x < b.width; x++ {
+		fmt.Printf("%2d  ", x+1)
 	}
 	fmt.Println()
 }
@@ -174,7 +234,9 @@ func showPiece(b *board, x int, y int, h bool) string {
 	if p == MINE {
 		return "\033[41;1m \033[0m\033[31;1mX\033[0m\033[41;1m \033[0m"
 	} else if p == UNKNOWN {
-		return "\033[47m ? \033[0m"
+		return "\033[47m - \033[0m"
+	} else if p == POSSIBLE {
+		return "\033[43m ? \033[0m"
 	} else {
 		ps := strconv.FormatInt(p, 10)
 		pString := string("X")
@@ -195,11 +257,17 @@ func validDimension(b *board, x int, y int) bool {
 // main game loop
 func Play(b *board) string {
 	sc := bufio.NewScanner(os.Stdin)
-	fmt.Printf("\033[2J\033[0H\033[1mCurrent Board\n")
-	revealBoard(b, true)
+	fmt.Printf("\033[2J\033[0H\033[1mCurrent Board\n\033[0m")
 	for true {
-		fmt.Printf("Please choose a spot to check for mine [origin at 1,1] (y,x): ")
+//		fmt.Printf("\033[1mCurrent Board\n")
+		revealBoard(b, true)
+		fmt.Printf("\nPlease choose a spot to check for a mine [origin at 1,1] (y,x)[,?]: ")
 		err := sc.Scan()
+		fmt.Printf("\n")
+		for x := 0 ; x < 80; x++ {
+			fmt.Printf(ANSI_LINE)
+		}
+		fmt.Printf("\n")
 		if !err {
 			msg := sc.Err()
 			if msg == nil {
@@ -211,9 +279,13 @@ func Play(b *board) string {
 		}
 
 		input := sc.Text()
-
 		dim := strings.Split(input, ",")
-		if len(dim) != 2 {
+		safeMark := bool(false)
+		if len(dim) == 3 {
+			if strings.Compare(dim[2], "?") == 0 {
+				safeMark = true;
+			}
+		} else if len(dim) != 2 {
 			fmt.Println("Invalid Syntax")
 			continue
 		}
@@ -228,30 +300,45 @@ func Play(b *board) string {
 		if ierr != nil {
 			fmt.Println(ierr)
 		}
+
 		if !validDimension(b, x, y) {
 			fmt.Println("** Out of Range")
 			continue
 		}
 		if b.discoveredBoard[x][y] != UNKNOWN {
-			fmt.Printf("You have already revealed space %d,%d: value = %s\n",
-				x, y, showPiece(b, x, y, true))
+			if b.discoveredBoard[x][y] == POSSIBLE {
+				fmt.Printf("resetting space %d,%d from %s",
+					x+1, y+1, showPiece(b, x, y, true))
+				b.discoveredBoard[x][y] = UNKNOWN
+				fmt.Printf(" back to %s\n", showPiece(b,x,y,true))
+			} else {
+				fmt.Printf("You have already revealed space %d,%d: value = %s\n",
+					x+1, y+1, showPiece(b, x, y, true))
+			}
 			continue
 		}
-		if IsMined(b, x, y) {
-			fmt.Printf("\033[2J\033[0H")
+		if (safeMark) {
+			if (b.discoveredBoard[x][y] != UNKNOWN) {
+				fmt.Printf("You have already revealed space %d,%d: value = %s\n",
+					x+1, y+1, showPiece(b, x, y, true))
+			} else {				
+				b.discoveredBoard[x][y] = POSSIBLE
+			}
+		} else if IsMined(b, x, y) {
+//			fmt.Printf("\033[2J\033[0H")
 			fmt.Printf("\033[31mBOOM!!!\033[0m\n")
 			revealBoard(b, false)
 			return "BOOM"
+		} else {
+			b.discoveredBoard[x][y] = b.actualBoard[x][y]
+			b.spotsTraversedSoFar++
+			if b.spotsTraversedSoFar+b.mineCount == b.boardSize {
+//				fmt.Printf("\033[2J\033[0H")
+				fmt.Printf("\033[42mYOU WIN !!!\033[0m\n")
+				revealBoard(b, false)
+				return "YOU WIN"
+			}
 		}
-		b.discoveredBoard[x][y] = b.actualBoard[x][y]
-		b.spotsTraversedSoFar++
-		if b.spotsTraversedSoFar+b.mineCount == b.boardSize {
-			fmt.Printf("\033[2J\033[0H")
-			fmt.Printf("\033[32mYOU WIN !!!\033[0m\n")
-			return "YOU WIN"
-		}
-		fmt.Printf("\033[2J\033[0H\033[1mCurrent Board\n")
-		revealBoard(b, true)
 	}
 	return "DONE"
 }

@@ -1,3 +1,6 @@
+// Simple implementation of MineSwepper:
+//     https://en.wikipedia.org/wiki/Minesweeper_(video_game)
+
 package main
 
 import (
@@ -57,6 +60,7 @@ func main() {
 	fmt.Printf("Error: %v\n", errMsg)
 }
 
+// Provide command-line usage
 func Usage(err error) {
 	if err == nil {
 		err = errors.New("")
