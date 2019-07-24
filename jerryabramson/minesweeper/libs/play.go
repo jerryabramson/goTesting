@@ -31,7 +31,6 @@ const (
     TOP_LEFT_CORNER             = "\u250c"
     TOP_RIGHT_CORNER            = "\u2510"
     VERTICAL_BAR                = "\u2502"
-
 )
 
 // encapsulate the board
@@ -51,21 +50,21 @@ type board struct {
 // arrays. Instead, you have an array of arrays.
 func New(m int, w int, h int) board {
 	b := board{
-		discoveredBoard: make([][]int64, w, h),
-		actualBoard:     make([][]int64, w, h),
+		discoveredBoard: make([][]int64, w*h),
+		actualBoard:     make([][]int64, w*h),
 		mineCount:       m,
 		boardSize:       w * h,
 		width:           w,
 		height:          h,
 		seed:            rand.NewSource(time.Now().UnixNano())}
 	b.myRandom = rand.New(b.seed)
-	for x := 0; x < w; x++ {
-		b.discoveredBoard[x] = make([]int64, h)
-		b.actualBoard[x] = make([]int64, h)
+	for y := 0; y < h; y++ {
+		b.discoveredBoard[y] = make([]int64, w)
+		b.actualBoard[y] = make([]int64, w)
 	}
-	for x := 0; x < w; x++ {
-		for y := 0; y < h; y++ {
-			b.discoveredBoard[x][y] = UNKNOWN
+	for y := 0; y < h; y++ {
+		for x := 0; x < w; x++ {
+			b.discoveredBoard[y][x] = UNKNOWN
 		}
 	}
 
@@ -78,11 +77,11 @@ func PopulateBoard(b *board) {
 	for {
 		spotW := b.myRandom.Intn(b.width)
 		spotH := b.myRandom.Intn(b.height)
-		if b.actualBoard[spotW][spotH] != MINE {
-			b.actualBoard[spotW][spotH] = MINE
+		if b.actualBoard[spotH][spotW] != MINE {
+			b.actualBoard[spotH][spotW] = MINE
 			minesSoFar--
 			if minesSoFar == 0 {
-				fmt.Printf("Done\n")
+//				fmt.Printf("Done\n")
 				setBoardCounts(b)
 				return
 			}
@@ -93,7 +92,7 @@ func PopulateBoard(b *board) {
 
 // determine if a space is a mine
 func IsMined(b *board, x int, y int) bool {
-	return b.actualBoard[x][y] == MINE
+	return b.actualBoard[y][x] == MINE
 }
 
 // Count the number of mines surrounding a given point
@@ -119,33 +118,31 @@ func IsMined(b *board, x int, y int) bool {
 	 */
 func CountsAroundPoint(b *board, x int, y int) int64 {
 	cnt := int64(0)
-	checkXoffset := int(-1)
-	checkYoffset := int(-1)
-	for true {
-		if checkXoffset == 0 && checkYoffset == 0 {
-			checkXoffset++
-			continue
-		} else {
-			px := x + checkXoffset
-			py := y + checkYoffset
-			if px >= 0 && px < b.width {
-				if py >= 0 && py < b.height {
-					pieceAround := b.actualBoard[px][py]
-					if pieceAround == MINE {
-						cnt++
-					}
+//	fmt.Printf("piecesAround y=%d,x=%d:\n", y+1,x+1)
+	checkXoffset := []int {-1,0,1}
+	checkYoffset := []int {-1,0,1}
+	var px int
+	var py int
+	for iy:= 0; iy < len(checkYoffset); iy++ {
+		py = y + checkYoffset[iy]
+		for ix := 0; ix < len(checkXoffset); ix++ {
+			px = x + checkXoffset[ix]
+			if (checkXoffset[ix] == 0 && checkYoffset[iy] == 0) {
+//				fmt.Printf("Origin")
+			} else if px >= 0 && px < b.width && py >= 0 && py < b.height {
+//				fmt.Printf("  check py=%d,px=%d; ", py+1,px+1)
+				pieceAround := b.actualBoard[py][px]
+//				fmt.Printf("piece = %d", pieceAround)
+				if pieceAround == MINE {
+					cnt++
 				}
+			} else {
+//				fmt.Printf("Out of bounds at py=%d,px=%d", py+1,px+1)
 			}
-			checkXoffset++
-			if checkXoffset == 2 {
-				checkXoffset = -1
-				checkYoffset++
-				if checkYoffset == 2 {
-					break
-				}
-			}
+//			fmt.Println()
 		}
 	}
+//	fmt.Printf("count = %d\n", cnt)
 	return cnt
 }
 
@@ -159,33 +156,25 @@ func revealBoard(b *board, h bool) {
 	fmt.Printf("\n")
 	fmt.Printf("    %s", TOP_LEFT_CORNER) 
 	for x := 0; x < b.width - 1; x++ {
-		fmt.Printf(ANSI_LINE)
-		fmt.Printf(ANSI_LINE)
-		fmt.Printf(ANSI_LINE)
+		printLine(3)
 		fmt.Printf(TOP_VERTICAL_BAR)
 	}
-	fmt.Printf(ANSI_LINE)
-	fmt.Printf(ANSI_LINE)
-	fmt.Printf(ANSI_LINE)
+	printLine(3)
 	fmt.Printf(TOP_RIGHT_CORNER)
 	fmt.Printf("\n")
-	for x := 0; x < b.width; x++ {
-		fmt.Printf("%4d%s", x+1, VERTICAL_BAR)
-		for y := 0; y < b.height; y++ {
+	for y := 0; y < b.height; y++ {
+		fmt.Printf("%4d%s", y+1, VERTICAL_BAR)
+		for x := 0; x < b.width; x++ {
 			fmt.Printf("%s%s", showPiece(b, x, y, h), VERTICAL_BAR)
 		}
 		fmt.Println()
-		if (x < b.width - 1) {
+		if (y < b.height - 1) {
 			fmt.Printf("    %s", LEFT_COLUMN_LINE) 
 			for x := 0; x < b.width - 1; x++ {
-				fmt.Printf(ANSI_LINE)
-				fmt.Printf(ANSI_LINE)
-				fmt.Printf(ANSI_LINE)
+				printLine(3)
 				fmt.Printf(BOTTOM_VERTICAL_BAR)
 			}
-			fmt.Printf(ANSI_LINE)
-			fmt.Printf(ANSI_LINE)
-			fmt.Printf(ANSI_LINE)
+			printLine(3)
 			fmt.Printf(RIGHT_COLUMN_LINE)
 			fmt.Printf("\n")
 		}
@@ -193,14 +182,10 @@ func revealBoard(b *board, h bool) {
 	}
 	fmt.Printf("    %s", BOTTOM_LEFT_CORNER) 
 	for x := 0; x < b.width - 1; x++ {
-		fmt.Printf(ANSI_LINE)
-		fmt.Printf(ANSI_LINE)
-		fmt.Printf(ANSI_LINE)
+		printLine(3)
 		fmt.Printf(BOTTOM_BAR)
 	}
-	fmt.Printf(ANSI_LINE)
-	fmt.Printf(ANSI_LINE)
-	fmt.Printf(ANSI_LINE)
+	printLine(3)
 	fmt.Printf(BOTTOM_RIGHT_CORNER)
 	fmt.Println()
 	fmt.Printf("\033[0m     ")
@@ -214,11 +199,13 @@ func revealBoard(b *board, h bool) {
 // mines around it. We skipp points that are mines
 // themselves.
 func setBoardCounts(b *board) {
-	for x := 0; x < b.width; x++ {
-		for y := 0; y < b.height; y++ {
-			if b.actualBoard[x][y] != MINE {
+	for y := 0; y < b.height; y++ {
+		for x := 0; x < b.width; x++ {
+			if b.actualBoard[y][x] != MINE {
 				c := CountsAroundPoint(b, x, y)
-				b.actualBoard[x][y] = c
+				b.actualBoard[y][x] = c
+			} else {
+//				fmt.Printf("mine at y=%d,x=%d\n", y+1,x+1)
 			}
 		}
 	}
@@ -230,7 +217,7 @@ func showPiece(b *board, x int, y int, h bool) string {
 	if !h {
 		myPieces = b.actualBoard
 	}
-	p := myPieces[x][y]
+	p := myPieces[y][x]
 	if p == MINE {
 		return "\033[41;1m \033[0m\033[31;1mX\033[0m\033[41;1m \033[0m"
 	} else if p == UNKNOWN {
@@ -257,17 +244,16 @@ func validDimension(b *board, x int, y int) bool {
 // main game loop
 func Play(b *board) string {
 	sc := bufio.NewScanner(os.Stdin)
-	fmt.Printf("\033[2J\033[0H\033[1mCurrent Board\n\033[0m")
+//	fmt.Printf("\033[2J\033[0H\033[1mCurrent Board\n\033[0m")
+	printLine(80)
+	fmt.Println()
+	fmt.Printf("\033[1mCurrent Board\n")
+	revealBoard(b, true)
+	fmt.Printf("\n")
+
 	for true {
-//		fmt.Printf("\033[1mCurrent Board\n")
-		revealBoard(b, true)
 		fmt.Printf("\nPlease choose a spot to check for a mine [origin at 1,1] (y,x)[,?]: ")
 		err := sc.Scan()
-		fmt.Printf("\n")
-		for x := 0 ; x < 80; x++ {
-			fmt.Printf(ANSI_LINE)
-		}
-		fmt.Printf("\n")
 		if !err {
 			msg := sc.Err()
 			if msg == nil {
@@ -290,13 +276,13 @@ func Play(b *board) string {
 			continue
 		}
 		var ierr error
-		x, ierr := SafeAtoI(dim[0])
-		x--
+		y, ierr := SafeAtoI(dim[0])
+		y--
 		if ierr != nil {
 			fmt.Println(ierr)
 		}
-		y, ierr := SafeAtoI(dim[1])
-		y--
+		x, ierr := SafeAtoI(dim[1])
+		x--
 		if ierr != nil {
 			fmt.Println(ierr)
 		}
@@ -305,11 +291,12 @@ func Play(b *board) string {
 			fmt.Println("** Out of Range")
 			continue
 		}
-		if b.discoveredBoard[x][y] != UNKNOWN {
-			if b.discoveredBoard[x][y] == POSSIBLE {
+
+		if b.discoveredBoard[y][x] != UNKNOWN {
+			if b.discoveredBoard[y][x] == POSSIBLE {
 				fmt.Printf("resetting space %d,%d from %s",
 					x+1, y+1, showPiece(b, x, y, true))
-				b.discoveredBoard[x][y] = UNKNOWN
+				b.discoveredBoard[y][x] = UNKNOWN
 				fmt.Printf(" back to %s\n", showPiece(b,x,y,true))
 			} else {
 				fmt.Printf("You have already revealed space %d,%d: value = %s\n",
@@ -318,19 +305,18 @@ func Play(b *board) string {
 			continue
 		}
 		if (safeMark) {
-			if (b.discoveredBoard[x][y] != UNKNOWN) {
+			if (b.discoveredBoard[y][x] != UNKNOWN) {
 				fmt.Printf("You have already revealed space %d,%d: value = %s\n",
-					x+1, y+1, showPiece(b, x, y, true))
+					y+1, x+1, showPiece(b, x, y, true))
 			} else {				
-				b.discoveredBoard[x][y] = POSSIBLE
+				b.discoveredBoard[y][x] = POSSIBLE
 			}
 		} else if IsMined(b, x, y) {
-//			fmt.Printf("\033[2J\033[0H")
 			fmt.Printf("\033[31mBOOM!!!\033[0m\n")
 			revealBoard(b, false)
-			return "BOOM"
+			return "You lost."
 		} else {
-			b.discoveredBoard[x][y] = b.actualBoard[x][y]
+			b.discoveredBoard[y][x] = b.actualBoard[y][x]
 			b.spotsTraversedSoFar++
 			if b.spotsTraversedSoFar+b.mineCount == b.boardSize {
 //				fmt.Printf("\033[2J\033[0H")
@@ -339,10 +325,20 @@ func Play(b *board) string {
 				return "YOU WIN"
 			}
 		}
+		printLine(80)
+		fmt.Println()
+		fmt.Printf("\033[1mCurrent Board\n")
+		revealBoard(b, true)
+
 	}
-	return "DONE"
+	return "End of loop."
 }
 
+func printLine(n int) {
+	for x := 0 ; x < n; x++ {
+		fmt.Printf(ANSI_LINE)
+	}
+}
 
 
 
