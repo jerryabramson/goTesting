@@ -56,8 +56,8 @@ func main() {
 	}
 	b := minesweeper.New(minesArg, widthArg, heightArg)
 	minesweeper.PopulateBoard(&b)
-	errMsg := minesweeper.Play(&b)
-	fmt.Printf("%v\n", errMsg)
+	minesweeper.Play(&b)
+//	fmt.Printf("%v\n", errMsg)
 }
 
 // Provide command-line usage
