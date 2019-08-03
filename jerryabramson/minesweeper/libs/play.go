@@ -246,7 +246,7 @@ func revealPiece(b *board, x int, y int, h bool) {
 	originX := 8
 	row := originY + y * 2 + 1
 	column := originX + (x-1) * 4 + 2
-//	fmt.Printf("\033[0;50Hrow=%d,column=%d", y, x)
+//	fmt.Printf("\033[1;50Hrow=%d,column=%d", y, x)
 	fmt.Printf("\033[%d;%dH%s", row, column, showPiece(b, x,y, h))
 }
 
@@ -258,7 +258,7 @@ func testPositioning(b *board) {
 			row := originY + y * 2
 			column := originX + (x-1) * 4 + 2
 			fmt.Printf("\033[%d;%dH%s", row, column, showPiece(b, x-1,y-1,false))
-//			fmt.Printf("\033[0;50Hrow=%d,column=%d", y, x)
+//			fmt.Printf("\033[1;50Hrow=%d,column=%d", y, x)
 			time.Sleep(50 * time.Millisecond)
 		}
 	}
@@ -269,8 +269,8 @@ func testPositioning(b *board) {
 func Play(b *board) string {
 	sc := bufio.NewScanner(os.Stdin)
 
-	fmt.Printf("\033[0H\033[2J")
-	fmt.Printf("\033[0H\033[1mCurrent Board\n\033[0m")
+	fmt.Printf("\033[1H\033[2J")
+	fmt.Printf("\033[1H\033[1mCurrent Board\n\033[0m")
 	printLine(80)
 	fmt.Println()
 	revealBoard(b, true)
@@ -279,7 +279,7 @@ func Play(b *board) string {
 	
 	
 	for true {
-		fmt.Printf("\033[25;1HPlease choose a spot to check for a mine [origin at 1,1] (y,x)[,?]:\033[K ")
+		fmt.Printf("\033[23;1HPlease choose a spot to check for a mine [origin at 1,1] (y,x)[,?]:\033[K ")
 		err := sc.Scan()
 		if !err {
 			msg := sc.Err()
@@ -288,7 +288,7 @@ func Play(b *board) string {
 			}
 			var errMsg strings.Builder
 			fmt.Fprintf(&errMsg, "\033[1;16H\033[31mI/O Error: %v\033[K\033[m", msg)
-			fmt.Printf("\033[26;1H")
+			fmt.Printf("\033[23;1H")
 			return errMsg.String()
 		}
 
@@ -350,7 +350,7 @@ func Play(b *board) string {
 			continue
 		} else if IsMined(b, x, y) {
 //			revealBoard(b, false)
-			fmt.Printf("\033[26;1H")
+			fmt.Printf("\033[23;1H")
 			fmt.Printf("\033[0H\033[2J")
 			fmt.Printf("\033[0H\033[1mCurrent Board\n\033[0m")
 			printLine(80)
@@ -358,14 +358,14 @@ func Play(b *board) string {
 			revealBoard(b, false)
 			fmt.Println()
 			fmt.Printf("\033[1;16H\033[41mBOOM!!!\033[0m\033[K\033[0m")
-			fmt.Printf("\033[26;1H\033[31mYOU LOST !!!\033[0m\033[K\033[0m\n")
+			fmt.Printf("\033[23;1H\033[31mYOU LOST !!!\033[0m\033[K\033[0m\n")
 			return "You lost."
 		} else {
 			b.discoveredBoard[y][x] = b.actualBoard[y][x]
 			b.spotsTraversedSoFar++
 			if b.spotsTraversedSoFar+b.mineCount == b.boardSize {
 //				fmt.Printf("\033[2J\033[0H")
-			fmt.Printf("\033[26;1H")
+			fmt.Printf("\033[23;1H")
 			fmt.Printf("\033[0H\033[2J")
 			fmt.Printf("\033[0H\033[1mCurrent Board\n\033[0m")
 			printLine(80)
@@ -373,7 +373,7 @@ func Play(b *board) string {
 			revealBoard(b, false)
 			fmt.Println()
 				fmt.Printf("\033[1;16H\033[42mYOU WIN !!!\033[0m\033[K\033[0m")
-				fmt.Printf("\033[26;1H\033[42mYOU WIN !!!\033[0m\033[K\033[0m\n")
+				fmt.Printf("\033[23;1H\033[42mYOU WIN !!!\033[0m\033[K\033[0m\n")
 				return "YOU WIN"
 			}
 		}
@@ -384,7 +384,7 @@ func Play(b *board) string {
 //		revealBoard(b, true)
 
 	}
-	fmt.Printf("\033[26;1H")
+	fmt.Printf("\033[23;1H")
 	return "End of loop."
 }
 
