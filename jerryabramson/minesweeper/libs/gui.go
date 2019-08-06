@@ -26,8 +26,11 @@ const (
 	ORIGINX                     = 8
 	PROMPT_CSI                  = "\033[23;1H"
 	CLEAR_EOL_CSI               = "\033[K"
-	STATUS_CSI                  = "\033[23;1H\033[K"
-
+	STATUS_CSI                  = "\033[1;16H\033[K"
+	RESET_COLOR_CSI             = "\033[0m"
+	COLOR_RED_CSI               = "\033[31m"
+	COLOR_GREEN_CSI               = "\033[32m"
+	COLOR_BLUE_CSI               = "\033[34m"
 )
 
 // Reveal either the board discovered so far,
@@ -208,11 +211,13 @@ func outOfRange() {
 	fmt.Printf("\033[1;16H\033[31m** Out of Range\033[K\033[0m")
 }
 
-func statusMsg(b *board, msg string, color string) {
+func statusMsg(b *board, msg string, color string, x int, y int) {
 	fmt.Printf(STATUS_CSI)
 	fmt.Printf(color)
 	fmt.Printf(msg)
-	fmt.Printf(resetColor)
+	fmt.Printf(RESET_COLOR_CSI)
+	showLocation(b, x, y)
+
 }
 
 func win(b *board, x int, y int) {
@@ -235,6 +240,7 @@ func explodeMine(b *board, x int, y int) {
 	drawWholeBoard(b, false)
 	fmt.Println()
 	fmt.Printf("\033[1;16H\033[41mBOOM!!!\033[0m\033[K\033[0m")
+	showLocation(b, x, y)
 	fmt.Printf("\033[24;1H\033[31mYOU LOST !!!\033[0m\033[K\033[0m")
 }
 

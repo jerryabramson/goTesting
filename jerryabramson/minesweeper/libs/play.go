@@ -15,7 +15,7 @@ import (
 const (
 	MINE                        = -1
 	UNKNOWN                     = -1000
-	POSSIBLE                    = 100
+	POSSIBLE                    = -100
 )
 
 // encapsulate the board
@@ -155,46 +155,49 @@ func Play(b *board) string {
 	drawWholeBoard(b, true)
 	for true {
 		x, y, ierr, safeMark := prompt(b)
+		clearStatus()
 		if (x == -99) {
 			break
 		}
-		clearStatus()
 		if (x == -1 || y == -1) {
 			continue
 		}
 		if (ierr == nil) {
 			if !validDimension(b, x, y) {
 				outOfRange()
+				continue
 			} else {
-				if (!safeMark) {
-					revealPiece(b, x, y, false)
-				}
-				if b.discoveredBoard[y][x] != UNKNOWN {
-					if b.discoveredBoard[y][x] == POSSIBLE {
-						resetSpace(b, x,y);
-						b.discoveredBoard[y][x] = UNKNOWN
+				if (safeMark) {
+					if b.discoveredBoard[y][x] == UNKNOWN {
+						b.discoveredBoard[y][x] = POSSIBLE
 						revealPiece(b, x, y, true)
+						statusMsg(b, "Setting piece as possibly mined", COLOR_BLUE_CSI, x, y)
 					} else {
 						duplicateMove(b, x, y)
 					}
+					continue
 				}
-				if (safeMark) {
-					if (b.discoveredBoard[y][x] != UNKNOWN) {
-						duplicateMove(b, x, y)
-					} else {				
-						b.discoveredBoard[y][x] = POSSIBLE
-						revealPiece(b, x, y, true)
-					}
-				} else if IsMined(b, x, y) {
+				if b.discoveredBoard[y][x] == POSSIBLE {
+					statusMsg(b, "Re-Setting piece to unknown", COLOR_GREEN_CSI, x, y)
+					b.discoveredBoard[y][x] = UNKNOWN
+					revealPiece(b, x, y, true)
+					continue
+				}
+				if b.discoveredBoard[y][x] == UNKNOWN {
+					revealPiece(b, x, y, false)
+				} else {
+					duplicateMove(b, x, y)
+					continue
+				}						
+				if IsMined(b, x, y) {
 					explodeMine(b, x, y)
 					return "You lost."
-				} else {
-					b.discoveredBoard[y][x] = b.actualBoard[y][x]
-					b.spotsTraversedSoFar++
-					if b.spotsTraversedSoFar+b.mineCount == b.boardSize {
-						win(b, x, y)
-						return "YOU WIN"
-					}
+				}
+				b.discoveredBoard[y][x] = b.actualBoard[y][x]
+				b.spotsTraversedSoFar++
+				if b.spotsTraversedSoFar+b.mineCount == b.boardSize {
+					win(b, x, y)
+					return "YOU WIN"
 				}
 			}
 		}
